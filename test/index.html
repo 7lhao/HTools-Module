@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+	<title>测试工具</title>
+	<style>
+		:root {
+			--bg: #F6F7F5;
+			--card: #FFFFFF;
+			--text: #202522;
+			--text-2: #747B76;
+			--text-3: #9AA19B;
+			--line: #E8EBE7;
+			--accent: #327A62;
+			--accent-bg: #EAF3EE;
+			--error: #C74C4C;
+		}
+
+		* {
+			box-sizing: border-box;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			background: var(--bg);
+			color: var(--text);
+			font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+			font-size: 15px;
+			line-height: 1.5;
+		}
+
+		.page {
+			max-width: 560px;
+			margin: 0 auto;
+			padding: 20px 18px calc(28px + env(safe-area-inset-bottom));
+		}
+
+		.head {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			margin-bottom: 16px;
+		}
+
+		.head h1 {
+			margin: 0;
+			font-size: 21px;
+			font-weight: 600;
+			letter-spacing: 0.2px;
+		}
+
+		.head p {
+			margin: 4px 0 0;
+			font-size: 12px;
+			color: var(--text-3);
+		}
+
+		.badge {
+			flex: 0 0 auto;
+			margin-top: 2px;
+			padding: 3px 10px;
+			border-radius: 8px;
+			font-size: 11px;
+			color: var(--accent);
+			background: var(--accent-bg);
+			white-space: nowrap;
+		}
+
+		.card {
+			background: var(--card);
+			border: 1px solid var(--line);
+			border-radius: 14px;
+			padding: 14px 16px;
+			margin-bottom: 10px;
+		}
+
+		.row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+		}
+
+		.row + .row {
+			margin-top: 12px;
+			padding-top: 12px;
+			border-top: 1px solid var(--line);
+		}
+
+		.label {
+			font-size: 14px;
+			color: var(--text-2);
+		}
+
+		.value {
+			font-size: 14px;
+			font-weight: 600;
+			color: var(--text);
+			font-variant-numeric: tabular-nums;
+		}
+
+		.value.ok {
+			color: var(--accent);
+		}
+
+		.value.warn {
+			color: var(--error);
+		}
+
+		.btn {
+			display: block;
+			width: 100%;
+			height: 46px;
+			margin-top: 12px;
+			border: 0;
+			border-radius: 12px;
+			background: var(--accent);
+			color: #fff;
+			font-size: 15px;
+			font-weight: 500;
+			transition: background 0.15s ease, transform 0.1s ease;
+		}
+
+		.btn:active {
+			background: #2B6B56;
+			transform: scale(0.985);
+		}
+
+		.btn.ghost {
+			background: transparent;
+			color: var(--accent);
+			border: 1px solid var(--line);
+		}
+
+		.btn.ghost:active {
+			background: var(--accent-bg);
+		}
+
+		.note {
+			margin: 16px 2px 0;
+			font-size: 12px;
+			color: var(--text-3);
+			line-height: 1.6;
+		}
+
+		.dot {
+			display: inline-block;
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--accent);
+			margin-right: 6px;
+			vertical-align: 1px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="page">
+		<div class="head">
+			<div>
+				<h1>测试工具</h1>
+				<p>from test/index.html</p>
+			</div>
+			<div class="badge">本地缓存</div>
+		</div>
+
+		<div class="card">
+			<div class="row">
+				<span class="label">页面运行状态</span>
+				<span class="value ok">正常</span>
+			</div>
+			<div class="row">
+				<span class="label">当前时间</span>
+				<span class="value" id="clock">--:--:--</span>
+			</div>
+			<div class="row">
+				<span class="label">网络状态</span>
+				<span class="value" id="net">检测中</span>
+			</div>
+			<div class="row">
+				<span class="label">交互计数</span>
+				<span class="value" id="count">0</span>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="row">
+				<span class="label">文件加载方式</span>
+				<span class="value" id="protocol">—</span>
+			</div>
+			<div class="row">
+				<span class="label">资源数量</span>
+				<span class="value" id="res">0</span>
+			</div>
+		</div>
+
+		<button class="btn" id="tapBtn">点击测试交互</button>
+		<button class="btn ghost" id="reloadBtn">重新加载本页</button>
+
+		<p class="note">
+			<span class="dot"></span>本页面由应用本地缓存加载，无需网络即可打开。<br />
+			时钟与计数由页面内脚本驱动，点击按钮可验证交互是否正常。
+		</p>
+	</div>
+
+	<script>
+		(function () {
+			// 时钟:每秒更新,验证页面脚本正在运行
+			function tick() {
+				var d = new Date();
+				var p = function (n) { return (n < 10 ? '0' : '') + n; };
+				var el = document.getElementById('clock');
+				if (el) el.textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+			}
+			tick();
+			setInterval(tick, 1000);
+
+			// 网络状态:用于验证沙盒离线时页面仍可正常渲染
+			function refreshNet() {
+				var el = document.getElementById('net');
+				if (!el) return;
+				var online = navigator.onLine;
+				el.textContent = online ? '在线' : '离线';
+				el.className = 'value ' + (online ? 'ok' : 'warn');
+			}
+			refreshNet();
+			window.addEventListener('online', refreshNet);
+			window.addEventListener('offline', refreshNet);
+
+			// 交互计数
+			var count = 0;
+			var countEl = document.getElementById('count');
+			var tapBtn = document.getElementById('tapBtn');
+			if (tapBtn) {
+				tapBtn.addEventListener('click', function () {
+					count += 1;
+					if (countEl) countEl.textContent = String(count);
+					try {
+						if (navigator.vibrate) navigator.vibrate(10);
+					} catch (e) { }
+				});
+			}
+
+			// 加载方式与资源数量:file:// 说明是本地文件,便于确认离线加载生效
+			try {
+				var protoEl = document.getElementById('protocol');
+				if (protoEl) protoEl.textContent = location.protocol || '—';
+
+				var resEl = document.getElementById('res');
+				if (resEl) resEl.textContent = String(document.querySelectorAll('*').length);
+			} catch (e) { }
+
+			var reloadBtn = document.getElementById('reloadBtn');
+			if (reloadBtn) {
+				reloadBtn.addEventListener('click', function () {
+					location.reload();
+				});
+			}
+		})();
+	</script>
+</body>
+
+</html>
