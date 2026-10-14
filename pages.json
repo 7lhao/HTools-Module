@@ -2,5 +2,9 @@
 	{
 		"title": "测试工具",
 		"fileName": "test/index.html"
+	},
+	{
+		"title": "负哥の寻宝小炒",
+		"fileName": "eggy-maps/index.html"
 	}
 ]
